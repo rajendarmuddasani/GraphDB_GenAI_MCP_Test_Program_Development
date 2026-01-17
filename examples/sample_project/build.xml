@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ExampleTestProgram" default="compile" basedir=".">
+  <description>
+    Example semiconductor test program build configuration
+    This is a sanitized example showing project structure without proprietary details
+  </description>
+
+  <!-- Project Properties -->
+  <property name="src.dir" value="src"/>
+  <property name="build.dir" value="build"/>
+  <property name="lib.dir" value="lib"/>
+
+  <!-- Java Version -->
+  <property name="java.version" value="17"/>
+
+  <!-- External Dependencies (Example JAR names) -->
+  <path id="classpath">
+    <fileset dir="${lib.dir}">
+      <include name="testframework-core.jar"/>
+      <include name="measurement-library.jar"/>
+      <include name="pattern-execution.jar"/>
+      <include name="datalog-handler.jar"/>
+    </fileset>
+  </path>
+
+  <!-- Clean Build Directory -->
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <!-- Initialize Build -->
+  <target name="init">
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <!-- Compile Java Sources -->
+  <target name="compile" depends="init">
+    <javac srcdir="${src.dir}" 
+           destdir="${build.dir}" 
+           classpathref="classpath"
+           source="${java.version}"
+           target="${java.version}"
+           includeantruntime="false">
+      <compilerarg value="-Xlint:all"/>
+    </javac>
+  </target>
+
+  <!-- Package Compiled Classes -->
+  <target name="package" depends="compile">
+    <jar destfile="${build.dir}/test-program.jar" basedir="${build.dir}">
+      <manifest>
+        <attribute name="Main-Class" value="testmethod.ExampleTestMethod"/>
+      </manifest>
+    </jar>
+  </target>
+
+</project>

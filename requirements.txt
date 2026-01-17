@@ -1,0 +1,31 @@
+# Core Dependencies
+neo4j==5.15.0
+python-dotenv==1.0.0
+pandas==2.1.4
+
+# Git Integration
+GitPython==3.1.40
+
+# Java Parsing
+tree-sitter==0.21.0
+tree-sitter-java==0.21.0
+
+# Jupyter Support
+jupyter==1.0.0
+ipykernel==6.27.1
+notebook==7.0.6
+
+# LLM Integration (Optional)
+openai==1.6.1
+sentence-transformers==2.2.2
+
+# Utilities
+requests==2.31.0
+pyyaml==6.0.1
+colorama==0.4.6
+tqdm==4.66.1
+
+# Development
+pytest==7.4.3
+black==23.12.1
+flake8==7.0.0

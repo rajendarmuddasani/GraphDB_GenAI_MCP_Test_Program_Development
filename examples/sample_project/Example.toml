@@ -1,0 +1,68 @@
+# Example Module Test Configuration
+
+[example_module]
+
+[example_module.ConditionsAndGradeables]
+endCondition = "NominalCondition"
+testConditions = ["MaxCondition", "MinCondition"]
+gradeableLists = ["max_tests", "min_tests"]
+max_tests = ["test1.max", "test2.max", "test3.max"]
+min_tests = ["test1.min", "test2.min"]
+
+# Simple functional tests
+[example_module.test1.max]
+testCase = "testcases.SimpleFunctionalTest"
+patterns = ["patterns.test1_pattern"]
+dlc = "10000000"
+testCondition = "MaxCondition"
+endCondition = "NominalCondition"
+
+[example_module.test2.max]
+testCase = "testcases.SimpleFunctionalTest"
+patterns = ["patterns.test2_pattern"]
+dlc = "10100000"
+testCondition = "MaxCondition"
+endCondition = "NominalCondition"
+
+[example_module.test3.max]
+testCase = "testcases.SimpleFunctionalTest"
+patterns = ["patterns.test3_pattern"]
+dlc = "10200000"
+testCondition = "MaxCondition"
+endCondition = "NominalCondition"
+
+# Analog measurement test configuration
+[example_module.analog_shared]
+pin = "analog_pin_1"
+averaging = 5
+settlingTime = 0.01
+
+# Analog Max test
+[example_module.test1.min]
+testCase = "testcases.AnalogMeasurementTest"  
+testCondition = "MinCondition"
+endCondition = "NominalCondition"
+
+patterns = [
+  "patterns.analog_setup",
+  "patterns.analog_measure_1",
+  "patterns.analog_measure_2"
+]
+dlcPatterns = ["20000001", "20000002", "20000003"]
+dlcMeasurements = ["20000100", "20000200", "20000300"]
+measurementTypes = ["ifvm", "vfim", "ifvm"]
+clamps = [1.5, 2.5, 3.5]
+
+[example_module.test2.min]
+testCase = "testcases.AnalogMeasurementTest"  
+testCondition = "MinCondition"
+endCondition = "NominalCondition"
+
+patterns = [
+  "patterns.analog_setup",
+  "patterns.analog_measure_4"
+]
+dlcPatterns = ["20100001", "20100002"]
+dlcMeasurements = ["20100100", "20100200"]
+measurementTypes = ["vfim", "vfim"]
+clamps = [1.0, 2.0]
