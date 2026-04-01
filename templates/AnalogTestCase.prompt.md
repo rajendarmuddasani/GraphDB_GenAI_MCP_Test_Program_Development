@@ -1,78 +1,69 @@
 ---
 mode: 'agent'
 model: GPT-4.1
-tools: ['search/codebase', 'toolbox/get_datas_from_particular_ingestion_version']
-description: 'Generate generic analog measurement test case - works for any IP module'
+tools: ['search/codebase']
+description: 'Generate a generic measurement-oriented Java test case from graph and configuration context'
 ---
 
-# Generate generic analog measurement test case using ONLY @ConfigParam
-# Supports N measurements with functional patterns
-# Works for IVR, ADC, PLL, bandgap, or any analog IP
+# Generate a generic measurement-oriented test case using public-safe framework-neutral structure
 
-# Use get_datas_from_particular_ingestion_version tool to fetch current Java templates (classes and Markdown linked to GitVersion with changeType != 'removed') - do not rely on static file references.
+# Use repository context, configuration files, and graph-backed project metadata when available.
 
-## Step-by-step data exploitation process:
+## Recommended workflow
 
-1. **Identify required classes** from the template:
-   - TlistTestCase (base class)
-   - IGradeableBrick (gradeable container)
-   - IFuncBrick (functional test brick)
-   - IIfVmBrick (current measurement brick)
-   - IVfImBrick (voltage measurement brick)
-   - IDlogConfig (datalog configuration)
-   - CallPfMode (pattern/opseq mode enum)
+1. **Identify the required framework roles** from the project:
+   - `BaseMeasurementCase`
+   - `GradeableGroup`
+   - `FunctionalPatternAction`
+   - `CurrentMeasurementAction`
+   - `VoltageMeasurementAction`
+   - `MeasurementDescriptor`
+   - `PatternExecutionMode`
 
-2. **Search in all_relations** for DESCRIBES relationships:
-   - Filter relations where `type == "DESCRIBES"`
-   - Match `startElementId` (markdown) with `endElementId` (Java class)
-   - Extract markdown files that describe the classes listed above
+2. **Use graph or repository context** to locate the current examples and configuration-driven cases that resemble the requested output.
 
-3. **Find current module version**:
-   - In `gitversions_classes`, locate entry where `moduleName == "libraries"`
-   - Extract `modulePath` and `name` for reference
-   - Note the `commit` and `timestamp` for traceability
+3. **Read the measurement configuration**:
+   - identify the test condition,
+   - identify measurement signals,
+   - identify patterns, labels, and thresholds,
+   - identify whether each measurement is voltage-forced or current-forced.
 
-4. **Validate markdown relevance**:
-   - Cross-reference markdown `elementId` from step 2 with `markdowns` array
-   - Prioritize markdowns with titles containing: "analog", "measurement", "vfim", "ifvm", "parametrization", "brick"
-   - Use ONLY markdowns that have DESCRIBES links to classes you're using
-
-5. **Report findings** before generation:
-   - List classes found with their versions
-   - List relevant markdown documentation identified via DESCRIBES relationships
-   - Mention if any required class or documentation is missing
+4. **Report findings before generation**:
+   - list the framework roles found,
+   - summarize the measurement configuration,
+   - note any missing assumptions.
 
 ## Documentation Guidelines
 
-- **Class-level Javadoc**: Provide comprehensive description of the test case's purpose, TOML configuration structure, and measurement flow. Explain the generic analog measurement approach without hardcoded examples.
-- **Method-level Javadoc**: Detail the logic of defineTestSequence(), including parameter reading, gradeable creation, and dynamic measurement brick configuration.
-- **Inline comments**: Explain key operations (pattern execution, measurement type selection, pin configuration) but keep concise.
-- **STRICT RULE**: NEVER include hardcoded values, examples, or specific pin names/DLC numbers in comments - only describe the generic structure and flow.
-- **IMPORT RULE**: Use explicit imports only - NO wildcard imports (no `.*`). Import each class individually (e.g., `import libraries.methodology.tlist.TlistTestCase;` instead of `import libraries.methodology.tlist.*;`).
+- **Class-level Javadoc**: Explain the measurement flow, configuration-driven inputs, and expected execution pattern in neutral terms.
+- **Method-level Javadoc**: Describe how each measurement step is created from configuration.
+- **Inline comments**: Keep them sparse and explanatory.
+- **STRICT RULE**: Do not hardcode environment-specific identifiers into comments.
+- **IMPORT RULE**: Use explicit imports only.
 
 ```java
-package libraries.ip.common.analog;
+package sample.measurement;
 
-import libraries.methodology.tlist.parametrization.TlistTestCase;
-import libraries.methodology.tlist.tlist.IGradeableBrick;
-import libraries.methodology.tlist.brick.IFuncBrick;
-import libraries.methodology.tlist.brick.IFuncBrick.CallPfMode;
-import libraries.methodology.tlist.brick.IIfVmBrick;
-import libraries.methodology.tlist.brick.IVfImBrick;
-import libraries.platform.datalog.IDlogConfig;
+import framework.actions.CurrentMeasurementAction;
+import framework.actions.FunctionalPatternAction;
+import framework.actions.FunctionalPatternAction.PatternExecutionMode;
+import framework.actions.VoltageMeasurementAction;
+import framework.reporting.MeasurementDescriptor;
+import framework.runtime.BaseMeasurementCase;
+import framework.runtime.GradeableGroup;
 
-public class TcIpGethIvr extends TlistTestCase {
+public class ExampleAnalogMeasurementCase extends BaseMeasurementCase {
 
-  @ConfigParam public String testCondition;
-  @ConfigParam public String pin;
-  @ConfigParam public int averaging;
-  @ConfigParam public double settlingTime;
+  public String testCondition;
+  public String signalName;
+  public int averaging;
+  public double settlingTime;
 
-  @ConfigParam public String[] patterns;
-  @ConfigParam public IDlogConfig[] dlcPatterns;
-  @ConfigParam public IDlogConfig[] dlcMeasurements;
-  @ConfigParam public String[] measurementTypes;
-  @ConfigParam public double[] clamps;
+  public String[] patterns;
+  public MeasurementDescriptor[] patternDescriptors;
+  public MeasurementDescriptor[] measurementDescriptors;
+  public String[] measurementTypes;
+  public double[] thresholds;
 
   @Override
   public void defineTestSequence() {
@@ -80,24 +71,22 @@ public class TcIpGethIvr extends TlistTestCase {
 
     for (int i = 0; i < patterns.length; i++) {
       final String measurementName = "meas" + i;
-      final String gradeableName = measurementName + "_" + suffix;
-      final IGradeableBrick gb = tlist.addGradeable(gradeableName);
+      final String groupName = measurementName + "_" + suffix;
+      final GradeableGroup group = testList.addGroup(groupName);
 
-      gb.addBrick(IFuncBrick.class, measurementName + "_func_" + suffix, dlcPatterns[i])
-        .setOpSeq(patterns[i], CallPfMode.SKIP);
+      group.addAction(FunctionalPatternAction.class, measurementName + "_pattern_" + suffix, patternDescriptors[i])
+        .setPattern(patterns[i], PatternExecutionMode.SKIP);
 
       if ("vfim".equalsIgnoreCase(measurementTypes[i])) {
-        gb.addBrick(IVfImBrick.class, measurementName + "_meas_" + suffix, dlcMeasurements[i])
-          .setForce(pin, 0.0)
-          .setClamp(clamps[i])
-          .setMeasure(pin, 0.0001)
+        group.addAction(VoltageMeasurementAction.class, measurementName + "_measure_" + suffix, measurementDescriptors[i])
+          .setSignal(signalName)
+          .setThreshold(thresholds[i])
           .setAverage(averaging)
           .setSettlingTime(settlingTime);
       } else {
-        gb.addBrick(IIfVmBrick.class, measurementName + "_meas_" + suffix, dlcMeasurements[i])
-          .setForce(pin, 0.0)
-          .setClamp(0.0, clamps[i])
-          .setMeasure(pin)
+        group.addAction(CurrentMeasurementAction.class, measurementName + "_measure_" + suffix, measurementDescriptors[i])
+          .setSignal(signalName)
+          .setThreshold(thresholds[i])
           .setAverage(averaging)
           .setSettlingTime(settlingTime);
       }

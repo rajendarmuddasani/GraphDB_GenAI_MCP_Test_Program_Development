@@ -86,6 +86,237 @@ tmp/
 temp/
 *.tmp
 
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
 # OS specific
 Thumbs.db
 .DS_Store
+*** Add File: /Users/rajendarmuddasani/postmartum/GraphDB_GenAI_MCP_Test_Program_Development/CONTRIBUTING.md
+# Contributing
+
+Contributions should keep the repository focused on reusable graph-backed developer tooling.
+
+## Principles
+
+- keep examples sanitized and publishable,
+- prefer small, reviewable pull requests,
+- update documentation when behavior changes,
+- avoid adding internal-only workflow notes or interview-preparation material.
+
+## Development Flow
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest
+```
+
+## Pull Request Expectations
+
+- describe the problem being solved,
+- include validation notes,
+- keep public docs aligned with the actual repository structure,
+- avoid speculative feature claims that the code does not support.
+*** Add File: /Users/rajendarmuddasani/postmartum/GraphDB_GenAI_MCP_Test_Program_Development/SECURITY.md
+# Security Policy
+
+## Supported Scope
+
+This repository is intended for publishable sample code and reference workflows.
+
+Do not commit:
+
+- live credentials,
+- customer or employer source code,
+- internal infrastructure details,
+- data sets that are not approved for public distribution.
+
+## Reporting
+
+If you discover a security issue in the code that is published here, report it privately to the maintainer before opening a public issue.
+
+## Hardening Notes
+
+- keep Neo4j credentials in environment variables,
+- keep MCP server configurations local when they contain secrets,
+- avoid broad raw-query handlers unless you trust the client and access path.
+*** Add File: /Users/rajendarmuddasani/postmartum/GraphDB_GenAI_MCP_Test_Program_Development/docs/ARCHITECTURE.md
+# Architecture Overview
+
+This repository is organized around a simple but extensible workflow for graph-backed developer tooling.
+
+## Core Components
+
+### Python entry point
+
+`src/neo4j_agent.py` provides:
+
+- environment-based Neo4j configuration,
+- project preflight scanning,
+- connection health checks,
+- Cypher query execution,
+- a small command-line interface for local usage.
+
+### Sample assets
+
+`examples/sample_project` includes a compact Java test asset, TOML configuration, and Ant build file. These files are intentionally small so the repository remains portable while still demonstrating the structure of a real workflow.
+
+### Prompt templates
+
+`templates/` stores prompt assets that can be paired with graph lookups and editor workflows.
+
+### Notebook examples
+
+The notebooks in `examples/` are optional exploration assets for local experimentation and explanation.
+
+## Extension Path
+
+The cleanest way to expand this project is:
+
+1. parse Java files with a structured parser such as Tree-sitter,
+2. materialize classes, methods, fields, and dependencies into Neo4j,
+3. expose a small MCP toolset on top of the graph,
+4. use prompt templates to drive context-aware generation.
+
+## Design Constraints
+
+- keep the repository publishable,
+- separate reusable code from private operational notes,
+- prefer honest scaffolding over inflated claims,
+- make local validation possible even without a live graph database.
+*** Add File: /Users/rajendarmuddasani/postmartum/GraphDB_GenAI_MCP_Test_Program_Development/pyproject.toml
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graph-mcp-code-intelligence"
+version = "0.1.0"
+description = "Reference implementation for graph-backed Java test generation workflows"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Project Maintainer" }
+]
+dependencies = [
+  "neo4j==5.15.0",
+  "python-dotenv==1.0.0",
+  "pandas==2.1.4",
+  "GitPython==3.1.40",
+  "tree-sitter==0.21.0",
+  "tree-sitter-java==0.21.0",
+  "jupyter==1.0.0",
+  "ipykernel==6.27.1",
+  "notebook==7.0.6",
+  "openai==1.6.1",
+  "sentence-transformers==2.2.2",
+  "requests==2.31.0",
+  "pyyaml==6.0.1",
+  "colorama==0.4.6",
+  "tqdm==4.66.1"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==7.4.3",
+  "black==23.12.1",
+  "flake8==7.0.0"
+]
+
+[project.scripts]
+graph-mcp-agent = "neo4j_agent:main"
+
+[tool.setuptools]
+py-modules = ["neo4j_agent"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+*** Add File: /Users/rajendarmuddasani/postmartum/GraphDB_GenAI_MCP_Test_Program_Development/tests/test_neo4j_agent.py
+from pathlib import Path
+
+import pytest
+
+from neo4j_agent import Neo4jAgent
+
+
+class _FakeResult:
+	def single(self):
+		return {"ok": 1}
+
+
+class _FakeSession:
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_value, traceback):
+		return False
+
+	def run(self, cypher, parameters=None):
+		return _FakeResult()
+
+
+class _FakeDriver:
+	def session(self):
+		return _FakeSession()
+
+	def close(self):
+		return None
+
+
+def test_collect_project_snapshot_counts_java_files_and_dependencies():
+	root = Path(__file__).resolve().parents[1]
+	sample_project = root / "examples" / "sample_project"
+	build_xml = sample_project / "build.xml"
+
+	snapshot = Neo4jAgent.collect_project_snapshot(sample_project, build_xml)
+
+	assert snapshot["java_file_count"] >= 1
+	assert snapshot["build_dependency_count"] == 4
+	assert "src/testmethod" in snapshot["packages"]
+
+
+def test_collect_project_snapshot_rejects_missing_paths(tmp_path):
+	missing_dir = tmp_path / "missing-project"
+	missing_build = tmp_path / "missing-build.xml"
+
+	with pytest.raises(FileNotFoundError):
+		Neo4jAgent.collect_project_snapshot(missing_dir, missing_build)
+
+
+def test_from_env_uses_environment_file(tmp_path):
+	env_file = tmp_path / ".env"
+	env_file.write_text(
+		"NEO4J_URI=bolt://localhost:7687\n"
+		"NEO4J_USER=neo4j\n"
+		"NEO4J_PASSWORD=test-password\n",
+		encoding="utf-8",
+	)
+
+	agent = Neo4jAgent.from_env(env_file=str(env_file), driver=_FakeDriver())
+
+	assert agent.uri == "bolt://localhost:7687"
+	assert agent.user == "neo4j"
+
+
+def test_verify_connection_returns_connected_status():
+	agent = Neo4jAgent(
+		uri="bolt://localhost:7687",
+		user="neo4j",
+		password="test-password",
+		driver=_FakeDriver(),
+	)
+
+	status = agent.verify_connection()
+
+	assert status == {
+		"connected": True,
+		"uri": "bolt://localhost:7687",
+	}

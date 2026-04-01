@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="ExampleTestProgram" default="compile" basedir=".">
+<project name="SampleJavaGraphProject" default="compile" basedir=".">
   <description>
-    Example semiconductor test program build configuration
-    This is a sanitized example showing project structure without proprietary details
+    Example Ant build file for a configuration-driven Java workflow
+    Included to demonstrate project scanning and dependency discovery in a public sample
   </description>
 
   <!-- Project Properties -->
@@ -13,13 +13,13 @@
   <!-- Java Version -->
   <property name="java.version" value="17"/>
 
-  <!-- External Dependencies (Example JAR names) -->
+  <!-- External Dependencies (Generic sample names) -->
   <path id="classpath">
     <fileset dir="${lib.dir}">
-      <include name="testframework-core.jar"/>
-      <include name="measurement-library.jar"/>
-      <include name="pattern-execution.jar"/>
-      <include name="datalog-handler.jar"/>
+      <include name="core-runtime.jar"/>
+      <include name="config-support.jar"/>
+      <include name="analysis-support.jar"/>
+      <include name="reporting-support.jar"/>
     </fileset>
   </path>
 

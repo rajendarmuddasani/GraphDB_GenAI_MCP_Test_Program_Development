@@ -1,70 +1,67 @@
 ---
 mode: 'agent'
 model: GPT-4.1
-tools: ['search/codebase', 'toolbox/get_datas_from_particular_ingestion_version']
-description: 'Generate generic Java TestMethod with TOML-driven configuration'
+tools: ['search/codebase']
+description: 'Generate a configuration-driven Java test method from graph and file context'
 ---
 
-# Generate Java class that reads all configuration from TOML - NO hardcoded arrays and no extra code other than required structure
+# Generate a Java test method that reads runtime behavior from configuration instead of hardcoded arrays
 
-# Use get_datas_from_particular_ingestion_version tool to fetch current Java templates (classes and Markdown linked to GitVersion with changeType != 'removed') - do not rely on static file references.
+# Use repository context, configuration files, and graph-backed project metadata when available. Do not assume unpublished internal package names or private framework classes.
 
-## Step-by-step data exploitation process:
+## Recommended workflow
 
-1. **Identify required classes** from the template:
-   - TlistBaseTm (base class)
-   - TlistTestCase (test case base class)
-   - IChangeLevelBrick (brick for level changes)
-   - ITlist, ITListManager (test list interfaces)
-   - IBlockParams (parameter reading)
-   - Param (parameter access)
+1. **Identify the required framework roles** from the target project:
+   - `BaseTestMethod`
+   - `TestCaseBase`
+   - `LevelChangeAction`
+   - `TestList`
+   - `TestListManager`
+   - `ConfigBlock`
+   - `ConfigLoader`
 
-2. **Search in all_relations** for DESCRIBES relationships:
-   - Filter relations where `type == "DESCRIBES"`
-   - Match `startElementId` (markdown) with `endElementId` (Java class)
-   - Extract markdown files that describe the classes listed above
+2. **Inspect graph or repository context** for version-specific structure:
+   - find the current base test method,
+   - locate related helper classes,
+   - identify any reusable examples already present in the codebase.
 
-3. **Find current module version**:
-   - In `gitversions_classes`, locate entry where `moduleName == "{module}"` (e.g., "libraries")
-   - Extract `modulePath` and `name` for reference
-   - Note the `commit` and `timestamp` for traceability
+3. **Read the configuration source** that drives the generated method:
+   - collect the module key,
+   - enumerate test conditions,
+   - enumerate gradeable groups,
+   - identify referenced test case classes and parameters.
 
-4. **Validate markdown relevance**:
-   - Cross-reference markdown `elementId` from step 2 with `markdowns` array
-   - Prioritize markdowns with titles containing: "test_tables", "parametrization", "tlist", "brick", "dynamic_loading"
-   - Use ONLY markdowns that have DESCRIBES links to classes you're using
-
-5. **Report findings** before generation:
-   - List classes found with their versions
-   - List relevant markdown documentation identified via DESCRIBES relationships
-   - Mention if any required class or documentation is missing
+4. **Report findings before generation**:
+   - list the framework roles you found,
+   - list the configuration sections used,
+   - note any missing context or assumptions.
 
 ## Documentation Guidelines
 
-- **Class-level Javadoc**: Provide comprehensive description of the test method's purpose, TOML configuration structure, and test flow. Explain the module, test conditions, gradeables, and dynamic test case loading generically without hardcoded examples.
-- **Method-level Javadoc**: Detail the logic of defineTestSequences(), including parameter reading, test list creation, dynamic test case instantiation via Class.forName(), and gradeable execution.
-- **Inline comments**: Explain key operations (TOML reading, level changes, dynamic class loading, test case addition) but keep concise.
-- **STRICT RULE**: NEVER include hardcoded values, examples, or specific DLC numbers in comments - only describe the generic structure and flow.
-- **IMPORT RULE**: Use explicit imports only - NO wildcard imports (no `.*`). Import each class individually (e.g., `import libraries.methodology.tlist.testmethod.TlistBaseTm;` instead of `import libraries.methodology.tlist.*;`).
+- **Class-level Javadoc**: Explain the goal of the generated test method, the configuration sections it consumes, and the execution flow at a framework-neutral level.
+- **Method-level Javadoc**: Describe how configuration is read, how conditions are iterated, and how test cases are instantiated dynamically.
+- **Inline comments**: Explain only the non-obvious steps.
+- **STRICT RULE**: Do not hardcode environment-specific values into comments or generated structure.
+- **IMPORT RULE**: Use explicit imports only.
 
-## TOML Reference (INPUT ONLY - DO NOT GENERATE)
+## Configuration Reference (INPUT ONLY - DO NOT GENERATE)
 ```toml
 [{MODULE}]
 
 [{MODULE}.ConditionsAndGradeables]
-endCondition = "DpsLevNoVsNom"
-testConditions = ["DpsLevNoVsMax", "DpsLevNoVsMin"]
+endCondition = "NominalCondition"
+testConditions = ["MaxCondition", "MinCondition"]
 gradeableLists = ["max", "min"]
 max = ["{gradeable1}.max", "{gradeable2}.max", "{gradeable3}.max", "{gradeable4}.max"]
 min = ["{gradeable5}.min"]
 
 [{MODULE}.{gradeable1}.max]
-testCase = "libraries.ip.common.func.TcFuncPattern"
-patternNames = "modules.{module}.opseqs.{pattern1}"
-dlc = "19000000"
+testCase = "framework.tests.PatternDrivenCase"
+patternNames = ["patterns.{pattern1}"]
+label = "quality_gate_1"
 
 [{MODULE}.{gradeable5}.min]
-testCase = "modules.{module}.testmethods.{TestCaseClass}"
+testCase = "framework.tests.{TestCaseClass}"
 testCaseParams = ["{param1}", "{param2}"]
 
 # ... additional gradeable sections
@@ -72,46 +69,51 @@ testCaseParams = ["{param1}", "{param2}"]
 
 ### Required Structure
 ```java
-import libraries.methodology.tlist.brick.IChangeLevelBrick;
-import libraries.methodology.tlist.testmethod.TlistBaseTm;
-import libraries.methodology.tlist.tlist.ITListManager;
-import libraries.methodology.tlist.tlist.ITlist;
-import libraries.platform.parametrization.IBlockParams;
-import libraries.platform.parametrization.Param;
+import framework.actions.LevelChangeAction;
+import framework.config.ConfigBlock;
+import framework.config.ConfigLoader;
+import framework.runtime.BaseTestMethod;
+import framework.runtime.TestCaseBase;
+import framework.runtime.TestList;
+import framework.runtime.TestListManager;
+import java.util.List;
 
-public class {ClassName} extends TlistBaseTm {
+public class {ClassName} extends BaseTestMethod {
   @Override
-  protected void defineTestSequences(ITListManager tlistManager) {
+  protected void defineTestSequences(TestListManager testListManager) {
     String paramFile = "modules/{module}/testtables/{Module}.toml";
-    IBlockParams params = Param.testParam().getParams(paramFile, "{module}");
-    IBlockParams cfg = Param.testParam().getParams(paramFile, "{module}.ConditionsAndGradeables");
+    ConfigBlock config = ConfigLoader.load(paramFile, "{module}.ConditionsAndGradeables");
 
-    String endCondition = cfg.getString("endCondition");
-    String[] testConditions = cfg.getStringArray("testConditions");
-    String[] gradeableLists = cfg.getStringArray("gradeableLists");
+    String endCondition = config.getString("endCondition");
+    String[] testConditions = config.getStringArray("testConditions");
+    String[] gradeableLists = config.getStringArray("gradeableLists");
 
-    ITlist tlist = tlistManager.create("{module}_func");
+    TestList testList = testListManager.create("{module}_workflow");
 
     for (int i = 0; i < testConditions.length; i++) {
       String tc = testConditions[i];
 
-      tlist.setupBegin(tc)
-          .addBrick(IChangeLevelBrick.class, "Begin_" + tc)
+      testList.setupBegin(tc)
+          .addAction(LevelChangeAction.class, "Begin_" + tc)
           .setLevel(tc);
 
-      List<String> gradeablesForCondition = cfg.getStringList(gradeableLists[i]);
+      List<String> gradeablesForCondition = config.getStringList(gradeableLists[i]);
       for (String gradeable : gradeablesForCondition) {
         String path = "{module}." + gradeable;
 
-        IBlockParams gbParams = Param.testParam().getParams(paramFile, path);
-        String testCaseType = gbParams.getString("testCase");
+        ConfigBlock testCaseConfig = ConfigLoader.load(paramFile, path);
+        String testCaseType = testCaseConfig.getString("testCase");
 
-        TlistTestCase testCase = tlist.addTestCase(Class.forName(testCaseType).asSubclass(TlistTestCase.class), paramFile, path);
+        TestCaseBase testCase = testList.addTestCase(
+            Class.forName(testCaseType).asSubclass(TestCaseBase.class),
+            paramFile,
+            path
+        );
         testCase.defineTestSequence();
       }
 
-      tlist.setupEnd(tc)
-          .addBrick(IChangeLevelBrick.class, "End_" + tc)
+      testList.setupEnd(tc)
+          .addAction(LevelChangeAction.class, "End_" + tc)
           .setLevel(endCondition);
     }
   }

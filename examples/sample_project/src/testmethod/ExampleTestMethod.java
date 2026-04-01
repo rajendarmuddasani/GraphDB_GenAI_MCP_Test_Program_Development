@@ -1,21 +1,21 @@
 package testmethod;
 
-import brick.IChangeLevelBrick;
-import testmethod.TlistBaseTm;
-import tlist.ITListManager;
-import tlist.ITlist;
-import parametrization.IBlockParams;
-import parametrization.Param;
-import testcase.TlistTestCase;
+import framework.actions.LevelChangeAction;
+import framework.config.ConfigBlock;
+import framework.config.ConfigLoader;
+import framework.runtime.BaseTestMethod;
+import framework.runtime.TestCaseBase;
+import framework.runtime.TestList;
+import framework.runtime.TestListManager;
 import java.util.List;
 
 /**
- * Example generic TOML-driven test method demonstrating knowledge graph ingestion patterns.
+ * Example configuration-driven test method for a public sample workflow.
+ *
+ * <p>This class shows how a generated test method can remain small while still
+ * reading execution behavior from configuration.</p>
  * 
- * <p>This is a sanitized example showing the structure of generated test methods without
- * proprietary implementation details.</p>
- * 
- * <h3>TOML Configuration Structure:</h3>
+ * <h3>Configuration Structure:</h3>
  * <pre>
  * [example_module]
  * [example_module.ConditionsAndGradeables]
@@ -26,80 +26,67 @@ import java.util.List;
  * 
  * <h3>Test Flow:</h3>
  * <ol>
- *   <li>Read configuration from TOML file</li>
- *   <li>Create test list for the module</li>
+ *   <li>Read configuration from a structured config file</li>
+ *   <li>Create a workflow list for the module</li>
  *   <li>For each test condition:
  *     <ul>
- *       <li>Setup begin with level change</li>
- *       <li>Load and execute gradeables</li>
- *       <li>Setup end with level change</li>
+ *       <li>Set the requested operating condition</li>
+ *       <li>Load and execute grouped test cases</li>
+ *       <li>Restore the end condition</li>
  *     </ul>
  *   </li>
  * </ol>
- * 
- * @see TlistBaseTm
- * @see TlistTestCase
- * @see IChangeLevelBrick
  */
-public class ExampleTestMethod extends TlistBaseTm {
+public class ExampleTestMethod extends BaseTestMethod {
 
   /**
-   * Define test sequences by reading TOML configuration and dynamically loading test cases.
-   * 
+   * Define test sequences by reading configuration and dynamically loading test cases.
+   *
    * <p>This method demonstrates:</p>
    * <ul>
-   *   <li>TOML parameter reading</li>
+   *   <li>Configuration loading</li>
    *   <li>Dynamic test case loading via Class.forName()</li>
-   *   <li>Level change automation</li>
-   *   <li>Gradeable execution</li>
+   *   <li>Condition transition handling</li>
+   *   <li>Grouped test execution</li>
    * </ul>
-   * 
-   * @param tlistManager the TList manager for creating and managing test lists
+   *
+   * @param testListManager the manager responsible for creating and managing workflow lists
    * @throws ClassNotFoundException if a test case class specified in TOML cannot be found
    */
   @Override
-  protected void defineTestSequences(ITListManager tlistManager) {
-    // Read TOML configuration
+  protected void defineTestSequences(TestListManager testListManager) {
+    // Load the module configuration block used by this sample test method.
     String paramFile = "testtables/Example.toml";
-    IBlockParams cfg = Param.testParam().getParams(paramFile, "example_module.ConditionsAndGradeables");
+    ConfigBlock config = ConfigLoader.load(paramFile, "example_module.ConditionsAndGradeables");
 
-    // Extract test conditions from TOML
-    String endCondition = cfg.getString("endCondition");
-    String[] testConditions = cfg.getStringArray("testConditions");
-    String[] gradeableLists = cfg.getStringArray("gradeableLists");
+    String endCondition = config.getString("endCondition");
+    String[] testConditions = config.getStringArray("testConditions");
+    String[] gradeableLists = config.getStringArray("gradeableLists");
 
-    // Create test list for example module
-    ITlist tlist = tlistManager.create("example_module_tests");
+    TestList testList = testListManager.create("example_module_workflow");
 
-    // Iterate through each test condition
     for (int i = 0; i < testConditions.length; i++) {
       String tc = testConditions[i];
 
-      // Setup begin: change level to test condition
-      tlist.setupBegin(tc)
-          .addBrick(IChangeLevelBrick.class, "Begin_" + tc)
+      testList.setupBegin(tc)
+          .addAction(LevelChangeAction.class, "Begin_" + tc)
           .setLevel(tc);
 
-      // Get gradeables for this test condition
-      List<String> gradeablesForCondition = cfg.getStringList(gradeableLists[i]);
+      List<String> gradeablesForCondition = config.getStringList(gradeableLists[i]);
       
-      // Add each gradeable test case dynamically
       for (String gradeable : gradeablesForCondition) {
         String path = "example_module." + gradeable;
 
         try {
-          // Read test case configuration from TOML
-          IBlockParams gbParams = Param.testParam().getParams(paramFile, path);
-          String testCaseType = gbParams.getString("testCase");
+          ConfigBlock testCaseConfig = ConfigLoader.load(paramFile, path);
+          String testCaseType = testCaseConfig.getString("testCase");
 
-          // Dynamic class loading: instantiate test case from TOML
-          TlistTestCase testCase = tlist.addTestCase(
-              Class.forName(testCaseType).asSubclass(TlistTestCase.class), 
-              paramFile, 
+          TestCaseBase testCase = testList.addTestCase(
+              Class.forName(testCaseType).asSubclass(TestCaseBase.class),
+              paramFile,
               path
           );
           
-          // Execute test case sequence
           testCase.defineTestSequence();
           
         } catch (ClassNotFoundException e) {
@@ -107,9 +94,8 @@ public class ExampleTestMethod extends TlistBaseTm {
         }
       }
 
-      // Setup end: change level back to nominal
-      tlist.setupEnd(tc)
-          .addBrick(IChangeLevelBrick.class, "End_" + tc)
+      testList.setupEnd(tc)
+          .addAction(LevelChangeAction.class, "End_" + tc)
           .setLevel(endCondition);
     }
   }
