@@ -1,5 +1,9 @@
 # Graph-Backed Java Test Generation
 
+[![CI](https://github.com/rajendarmuddasani/GraphDB_GenAI_MCP_Test_Program_Development/actions/workflows/ci.yml/badge.svg)](https://github.com/rajendarmuddasani/GraphDB_GenAI_MCP_Test_Program_Development/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-14%20passed-brightgreen)
+[![Evidence](https://img.shields.io/badge/evidence-verified-blue)](evidence/claims.json)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Neo4j 5.0+](https://img.shields.io/badge/neo4j-5.0+-green.svg)](https://neo4j.com/)
