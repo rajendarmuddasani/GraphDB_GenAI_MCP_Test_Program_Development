@@ -110,6 +110,6 @@ jobs:
       - name: Build non-root image
         run: docker build --tag project10-mcp:ci .
       - name: Verify runtime identity
-        run: test "$(docker run --rm --entrypoint id project10-mcp:ci -u)" = "65532"
+        run: test "$(docker image inspect --format '{{.Config.User}}' project10-mcp:ci)" = "65532:65532"
       - name: Exercise MCP over container stdio
         run: python scripts/container_smoke.py docker run --rm -i project10-mcp:ci

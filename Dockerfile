@@ -1,5 +1,6 @@
 FROM cgr.dev/chainguard/python:latest-dev@sha256:b08980b41611a3887dfca3823286a84b2b8557c70ec7f151265c1d53fd67c68e AS builder
 
+USER 0
 WORKDIR /app
 
 RUN python -m venv /venv
