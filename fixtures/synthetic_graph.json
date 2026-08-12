@@ -1,0 +1,56 @@
+{
+  "fixture_id": "synthetic-java-test-framework-v1",
+  "version": "v1.0.0",
+  "provenance": "Independently generated synthetic framework metadata",
+  "license": "CC0-1.0",
+  "symbols": [
+    {
+      "name": "BaseTestMethod",
+      "qualified_name": "synthetic.framework.runtime.BaseTestMethod",
+      "kind": "class",
+      "methods": ["defineTestSequences"]
+    },
+    {
+      "name": "TestListManager",
+      "qualified_name": "synthetic.framework.runtime.TestListManager",
+      "kind": "class",
+      "methods": ["create"]
+    },
+    {
+      "name": "TestList",
+      "qualified_name": "synthetic.framework.runtime.TestList",
+      "kind": "class",
+      "methods": ["setupBegin", "setupEnd", "addTestCase"]
+    },
+    {
+      "name": "TestCaseBase",
+      "qualified_name": "synthetic.framework.runtime.TestCaseBase",
+      "kind": "class",
+      "methods": ["defineTestSequence"]
+    },
+    {
+      "name": "ConfigLoader",
+      "qualified_name": "synthetic.framework.config.ConfigLoader",
+      "kind": "class",
+      "methods": ["load"]
+    },
+    {
+      "name": "ConfigBlock",
+      "qualified_name": "synthetic.framework.config.ConfigBlock",
+      "kind": "class",
+      "methods": ["getString", "getStringArray", "getStringList"]
+    },
+    {
+      "name": "LevelChangeAction",
+      "qualified_name": "synthetic.framework.actions.LevelChangeAction",
+      "kind": "class",
+      "methods": ["setLevel"]
+    },
+    {
+      "name": "AuditLogger",
+      "qualified_name": "synthetic.framework.observability.AuditLogger",
+      "kind": "class",
+      "methods": ["recordEvent"]
+    }
+  ]
+}

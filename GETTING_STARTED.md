@@ -1,209 +1,179 @@
 # Getting Started
 
-This guide sets up the repository for local exploration and validates the sample project before you wire in a live Neo4j instance.
+This guide runs the accepted bounded intent-to-graph-to-Java workflow. The offline fixture path is the fastest start; Neo4j is optional but required to reproduce the live GraphDB evidence.
 
 ## Prerequisites
 
-- Python 3.9 or newer
-- Neo4j 5.x, if you want to run connection checks or queries
-- A shell with standard development tooling
+- Python 3.10 or 3.12
+- Docker with Linux containers for the Compose and image gates, or a local Neo4j 5.26 instance
+- JDK 21 for the `javac` compile gate
 
-## Install Dependencies
+## Install
+
+### Windows PowerShell
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.txt
+python -m pip install --no-deps -e .
+```
+
+### Linux or macOS
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.txt
+python -m pip install --no-deps -e .
 ```
 
-## Configure Environment
+## Run the Offline MCP Path
+
+The default backend reads the versioned CC0 JSON fixture. It does not need credentials or network access.
 
 ```bash
-cp configs/.env.example .env
+python scripts/container_smoke.py python -m graph_mcp.server
 ```
 
-Set the values that match your Neo4j environment.
+Expected result:
 
-## Run A Project Preflight Scan
-
-The preflight command validates the input paths and summarizes the sample Java project without requiring a live database connection.
-
-```bash
-python src/neo4j_agent.py preflight \
-    --version v1.0.0 \
-    --project-path examples/sample_project \
-    --build-xml-path examples/sample_project/build.xml
-```
-
-Expected output is JSON containing:
-
-- discovered Java files,
-- package count,
-- build dependency names from `build.xml`,
-- the exact paths that would be used for a fuller ingestion flow.
-
-## Check Neo4j Connectivity
-
-Once Neo4j is running, verify the connection:
-
-```bash
-python src/neo4j_agent.py health-check --env-file .env
-```
-
-## Execute A Cypher Query
-
-```bash
-python src/neo4j_agent.py query \
-    --env-file .env \
-    --cypher "MATCH (n) RETURN count(n) AS total"
-```
-
-## Explore The Included Assets
-
-- `examples/sample_project` contains a compact Java, TOML, and Ant-based sample.
-- `templates/` contains prompt templates for structured code generation flows.
-- `examples/*.ipynb` contains notebook-based walkthroughs for interactive exploration.
-- `docs/MCP_INTEGRATION.md` covers MCP setup details.
-
-## Run Tests
-
-```bash
-pytest
-```
-
-## Seed the Graph (Optional)
-
-If you want to populate Neo4j with the sample dataset used by the notebooks:
-
-```bash
-python scripts/seed_neo4j.py
-```
-
-This creates two versions of a Java test framework (v2.3.0 and v2.4.0) with classes, methods, inheritance, dependencies, imports, and documentation links.
-
-## Cypher Query Reference
-
-Once the database is seeded, try these queries in the Neo4j Browser (`http://localhost:7474`) or via the CLI.
-
-### Browse All Classes
-
-```cypher
-MATCH (c:Class)
-RETURN c.name AS ClassName, c.category AS Category, c.gitTag AS Version
-ORDER BY c.name
-```
-
-### Inheritance Hierarchy
-
-```cypher
-MATCH path = (child:Class)-[:EXTENDS]->(parent:Class)
-RETURN child.name AS Child, parent.name AS Parent
-```
-
-### Methods Defined by a Specific Class
-
-```cypher
-MATCH (c:Class {name: 'ExampleTestMethod'})-[:DEFINES_METHOD]->(m:Method)
-RETURN m.name AS MethodName, m.visibility AS Visibility, m.returnType AS ReturnType
-ORDER BY m.name
-```
-
-### Dependency Hot Spots
-
-```cypher
-MATCH (c:Class)-[:DEPENDS_ON]->(dep:ExternalDependency)
-WITH c, count(dep) AS DepCount, collect(dep.name) AS Dependencies
-RETURN c.name AS Class, DepCount, Dependencies
-ORDER BY DepCount DESC
-LIMIT 10
-```
-
-### Classes Using a Specific Dependency
-
-```cypher
-MATCH (c:Class)-[:DEPENDS_ON]->(dep:ExternalDependency)
-WHERE dep.name CONTAINS 'core-runtime'
-RETURN c.name AS Class, c.category AS Category
-ORDER BY c.name
-```
-
-### Most-Extended Base Classes
-
-```cypher
-MATCH (child:Class)-[:EXTENDS]->(parent:Class)
-WITH parent, count(child) AS ChildCount, collect(child.name) AS Children
-WHERE ChildCount > 1
-RETURN parent.name AS BaseClass, ChildCount, Children
-ORDER BY ChildCount DESC
-```
-
-### Import Usage Frequency
-
-```cypher
-MATCH (c:Class)-[:IMPORTS]->(i:Import)
-WITH i.path AS ImportPath, count(c) AS UsageCount
-RETURN ImportPath, UsageCount
-ORDER BY UsageCount DESC
-LIMIT 10
-```
-
-### Documentation Coverage
-
-```cypher
-MATCH (c:Class)
-OPTIONAL MATCH (md:MarkdownFile)-[:RESOLVES_TO]->(c)
-WITH c, count(md) AS DocCount
-RETURN
-  count(c) AS TotalClasses,
-  sum(CASE WHEN DocCount > 0 THEN 1 ELSE 0 END) AS DocumentedClasses,
-  round(100.0 * sum(CASE WHEN DocCount > 0 THEN 1 ELSE 0 END) / count(c), 1) AS CoveragePercent
-```
-
-### Compare Versions
-
-```cypher
-MATCH (c:Class)
-WHERE c.gitTag IN ['v2.3.0', 'v2.4.0']
-WITH c.gitTag AS Version, count(c) AS ClassCount
-RETURN Version, ClassCount
-ORDER BY Version
-```
-
-### Classes Added in a New Version
-
-```cypher
-MATCH (c:Class {gitTag: 'v2.4.0'})
-WHERE NOT EXISTS {
-  MATCH (old:Class {gitTag: 'v2.3.0', qualifiedName: c.qualifiedName})
+```json
+{
+  "status": "passed",
+  "tool_count": 5,
+  "groundedness": 1.0
 }
-RETURN c.name AS NewClass, c.category AS Category
 ```
 
-### Database Statistics
+To start the stdio server for an MCP client:
 
-```cypher
-MATCH (n)
-RETURN labels(n)[0] AS NodeType, count(*) AS Count
-ORDER BY Count DESC
+```bash
+python -m graph_mcp.server
 ```
 
-### Visual Graph Queries (Neo4j Browser)
+## Configure an MCP Client
 
-These produce interactive graph visualizations when run in the Neo4j Browser:
+Use an absolute path to the virtual-environment Python executable and set the repository as the working directory:
 
-```cypher
-// Full inheritance tree (graph view)
-MATCH path = (child:Class)-[:EXTENDS]->(parent:Class) RETURN path
-
-// ExampleTestMethod neighborhood
-MATCH (c:Class {name: 'ExampleTestMethod', gitTag: 'v2.3.0'})-[r]->(n) RETURN c, r, n
-
-// Complete graph overview
-MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100
+```json
+{
+  "servers": {
+    "synthetic-java-test-generator": {
+      "type": "stdio",
+      "command": "ABSOLUTE_PATH_TO_PYTHON",
+      "args": ["-m", "graph_mcp.server"],
+      "cwd": "ABSOLUTE_PATH_TO_REPOSITORY",
+      "env": {
+        "GRAPH_BACKEND": "fixture"
+      }
+    }
+  }
+}
 ```
 
-## Next Steps
+The client can call `get_fixture_metadata`, `search_graph`, `generate_java_test`, `generate_java_test_from_intent`, and `validate_java_source`.
 
-1. Extend `src/neo4j_agent.py` with parser-backed extraction and Neo4j persistence.
-2. Add your MCP server configuration from [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md).
-3. Replace the sample project with a sanitized internal code sample when you are ready.
+## Try a Supported Intent
+
+Call `generate_java_test_from_intent` with:
+
+```text
+Create VoltageMarginWorkflow as a Java test workflow in generated.tests backed by module voltage_margin and config testtables/VoltageMargin.toml for v1.0.0.
+```
+
+Requests outside the three documented grammar forms return `unrecognized_intent`. Traversal such as `../private.toml` returns `unsafe_config_path` before generation.
+
+## Run with Live Neo4j
+
+Set a local password without committing it:
+
+```powershell
+$env:NEO4J_PASSWORD = Read-Host -AsSecureString
+```
+
+For Compose, expose the password as a process environment variable in your shell, then start the service:
+
+```bash
+docker compose up -d neo4j
+```
+
+Set the runtime connection variables:
+
+```text
+NEO4J_URI=bolt://127.0.0.1:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=<local value>
+```
+
+Seed and verify the immutable fixture:
+
+```bash
+python scripts/wait_for_neo4j.py
+python scripts/seed_graph.py
+python scripts/verify_neo4j.py
+```
+
+Run MCP against Neo4j:
+
+```bash
+GRAPH_BACKEND=neo4j python -m graph_mcp.server
+```
+
+On PowerShell:
+
+```powershell
+$env:GRAPH_BACKEND = "neo4j"
+python -m graph_mcp.server
+```
+
+## Reproduce the Candidate Study
+
+The benchmark is deterministic except for measured latency:
+
+```bash
+python scripts/build_evaluation_fixture.py
+python scripts/evaluate_workflow.py
+python scripts/validate_evidence.py
+```
+
+The evaluator selects on validation only and evaluates confirmation only for `strict_graph_v2`. It records rejected candidates and all case-level outcomes.
+
+## Compile Accepted Java
+
+With JDK 21 on `PATH`:
+
+```bash
+python scripts/compile_generated.py --require-compiler
+```
+
+The harness compiles one accepted generated class plus seven CC0 synthetic framework stubs in a temporary directory and records no source outside the repository.
+
+## Test and Security Gates
+
+```bash
+pytest --cov=src --cov-report=term-missing --cov-fail-under=75
+ruff check src tests scripts
+pip-audit -r requirements.txt --progress-spinner off
+bandit -r src scripts -q -ll
+```
+
+The live graph test is opt-in:
+
+```bash
+RUN_NEO4J_INTEGRATION=1 pytest tests/test_neo4j_live.py -q
+```
+
+The CI workflow additionally compiles Java with Temurin 21, runs Neo4j 5.26.29 as a service, exercises MCP against that live backend, builds the non-root image, and calls MCP over container stdio.
+
+## Legacy Preflight Sample
+
+`examples/sample_project` remains only for the earlier Ant/TOML preflight scanner:
+
+```bash
+python src/neo4j_agent.py preflight --version v1.0.0 --project-path examples/sample_project --build-xml-path examples/sample_project/build.xml
+```
+
+It is not the accepted generation benchmark and should not be used as evidence for the MCP workflow.

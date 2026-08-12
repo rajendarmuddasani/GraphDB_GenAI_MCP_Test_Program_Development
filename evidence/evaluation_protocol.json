@@ -1,0 +1,26 @@
+{
+  "protocol_version": "1.0",
+  "benchmark_fixture": "fixtures/evaluation_cases.json",
+  "candidate_ids": [
+    "no_graph_v0",
+    "lenient_repair_v1",
+    "strict_graph_v2",
+    "wide_context_v3"
+  ],
+  "split_roles": {
+    "development": "Implementation feedback only",
+    "validation": "Candidate selection and safety gates",
+    "confirmation": "Opened once for the selected candidate only"
+  },
+  "selection_objective": "Maximize validation task_success_rate among candidates that pass every safety gate",
+  "tie_breaker": "Lower validation p95 latency, then lexical candidate ID",
+  "safety_gates": {
+    "task_success_rate_min": 0.95,
+    "generation_validation_pass_rate_min": 1.0,
+    "safe_rejection_recall_min": 1.0,
+    "citation_precision_min": 1.0,
+    "required_symbol_recall_min": 1.0,
+    "latency_p95_ms_max": 25.0
+  },
+  "confirmation_policy": "Do not compare or tune candidates on confirmation cases"
+}

@@ -1,0 +1,353 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-11T10:17:44.889705+00:00",
+  "project": "Graph-Backed MCP Java Test Generation",
+  "base_sha": "15a8fb63952f8c49eeb3201e0f29b0b7874bba6b",
+  "runtime_sha256": "03918ab1cd259eac1f555ea08674278b1e9368c751083fa816c010ef4c88aa9e",
+  "policy_identity": "strict_graph_v2:03918ab1cd259eac1f555ea08674278b1e9368c751083fa816c010ef4c88aa9e",
+  "data_scope": "Independently generated synthetic natural-language intents",
+  "license": "CC0-1.0",
+  "counts": {
+    "total": 96,
+    "development": 32,
+    "validation": 32,
+    "confirmation": 32,
+    "supported_per_split": 24,
+    "adversarial_per_split": 8
+  },
+  "split_policy": "Disjoint supported scenario families and unique adversarial strings; confirmation is opened only for the selected policy.",
+  "artifacts": {
+    "benchmark_sha256": "2632317a3d67088d8fe4e5aa75cd5ebdb50f5fb02ab9113a1902621e905e037a",
+    "graph_fixture_sha256": "70b6bfd9c4b28e9827af19490a96546993f8b49458f87e5c3a5a17fc2f60a9ee",
+    "protocol_sha256": "bf4ce36185436aafb052f79b2c49aeeade2eaee0d450cd6c4af893ef35c3526f"
+  },
+  "selection": {
+    "objective": "Maximize validation task_success_rate among candidates that pass every safety gate",
+    "gates": {
+      "task_success_rate_min": 0.95,
+      "generation_validation_pass_rate_min": 1.0,
+      "safe_rejection_recall_min": 1.0,
+      "citation_precision_min": 1.0,
+      "required_symbol_recall_min": 1.0,
+      "latency_p95_ms_max": 25.0
+    },
+    "eligible_candidates": [
+      "strict_graph_v2"
+    ],
+    "selected_candidate": "strict_graph_v2",
+    "confirmation_opened_for": [
+      "strict_graph_v2"
+    ]
+  },
+  "development_results": {
+    "no_graph_v0": {
+      "candidate_id": "no_graph_v0",
+      "description": "Renders the template without graph citations; validation must reject it.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 7,
+      "task_success_rate": 0.21875,
+      "generation_validation_pass_rate": 0.0,
+      "safe_rejection_recall": 0.875,
+      "exact_rejection_accuracy": 0.875,
+      "false_acceptance_count": 0,
+      "mean_groundedness": 0.0,
+      "citation_precision": 0.0,
+      "required_symbol_recall": 0.0,
+      "error_rate": 0.78125,
+      "failure_taxonomy": {
+        "adversarial:validation_failed": 1,
+        "supported:validation_failed": 24
+      },
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1
+      },
+      "latency_ms": {
+        "p50": 0.2425,
+        "p95": 0.2832,
+        "p99": 0.6804,
+        "max": 0.6804
+      }
+    },
+    "lenient_repair_v1": {
+      "candidate_id": "lenient_repair_v1",
+      "description": "Silently replaces rejected requests with a safe default; measures false acceptance.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 24,
+      "task_success_rate": 0.75,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 0.0,
+      "exact_rejection_accuracy": 0.0,
+      "false_acceptance_count": 8,
+      "mean_groundedness": 1.0,
+      "citation_precision": 1.0,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.25,
+      "failure_taxonomy": {
+        "adversarial:generated": 8
+      },
+      "observed_rejection_codes": {},
+      "latency_ms": {
+        "p50": 0.3118,
+        "p95": 0.3851,
+        "p99": 0.5951,
+        "max": 0.5951
+      }
+    },
+    "strict_graph_v2": {
+      "candidate_id": "strict_graph_v2",
+      "description": "Uses exact graph context and fails closed on intent, syntax, contract, grounding, or safety errors.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 32,
+      "task_success_rate": 1.0,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 1.0,
+      "exact_rejection_accuracy": 1.0,
+      "false_acceptance_count": 0,
+      "mean_groundedness": 1.0,
+      "citation_precision": 1.0,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.0,
+      "failure_taxonomy": {},
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1,
+        "unsupported_version": 1
+      },
+      "latency_ms": {
+        "p50": 0.2977,
+        "p95": 0.3147,
+        "p99": 0.3723,
+        "max": 0.3723
+      }
+    },
+    "wide_context_v3": {
+      "candidate_id": "wide_context_v3",
+      "description": "Imports every graph symbol; tests whether extra irrelevant context improves the strict policy.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 31,
+      "task_success_rate": 0.96875,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 0.875,
+      "exact_rejection_accuracy": 0.875,
+      "false_acceptance_count": 1,
+      "mean_groundedness": 1.0,
+      "citation_precision": 0.875,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.03125,
+      "failure_taxonomy": {
+        "adversarial:generated": 1
+      },
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1
+      },
+      "latency_ms": {
+        "p50": 0.3137,
+        "p95": 0.3256,
+        "p99": 0.3409,
+        "max": 0.3409
+      }
+    }
+  },
+  "validation_results": {
+    "no_graph_v0": {
+      "candidate_id": "no_graph_v0",
+      "description": "Renders the template without graph citations; validation must reject it.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 7,
+      "task_success_rate": 0.21875,
+      "generation_validation_pass_rate": 0.0,
+      "safe_rejection_recall": 0.875,
+      "exact_rejection_accuracy": 0.875,
+      "false_acceptance_count": 0,
+      "mean_groundedness": 0.0,
+      "citation_precision": 0.0,
+      "required_symbol_recall": 0.0,
+      "error_rate": 0.78125,
+      "failure_taxonomy": {
+        "adversarial:validation_failed": 1,
+        "supported:validation_failed": 24
+      },
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1
+      },
+      "latency_ms": {
+        "p50": 0.2353,
+        "p95": 0.2524,
+        "p99": 0.3021,
+        "max": 0.3021
+      }
+    },
+    "lenient_repair_v1": {
+      "candidate_id": "lenient_repair_v1",
+      "description": "Silently replaces rejected requests with a safe default; measures false acceptance.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 24,
+      "task_success_rate": 0.75,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 0.0,
+      "exact_rejection_accuracy": 0.0,
+      "false_acceptance_count": 8,
+      "mean_groundedness": 1.0,
+      "citation_precision": 1.0,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.25,
+      "failure_taxonomy": {
+        "adversarial:generated": 8
+      },
+      "observed_rejection_codes": {},
+      "latency_ms": {
+        "p50": 0.3066,
+        "p95": 0.4376,
+        "p99": 0.4801,
+        "max": 0.4801
+      }
+    },
+    "strict_graph_v2": {
+      "candidate_id": "strict_graph_v2",
+      "description": "Uses exact graph context and fails closed on intent, syntax, contract, grounding, or safety errors.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 32,
+      "task_success_rate": 1.0,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 1.0,
+      "exact_rejection_accuracy": 1.0,
+      "false_acceptance_count": 0,
+      "mean_groundedness": 1.0,
+      "citation_precision": 1.0,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.0,
+      "failure_taxonomy": {},
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1,
+        "unsupported_version": 1
+      },
+      "latency_ms": {
+        "p50": 0.3059,
+        "p95": 0.3621,
+        "p99": 0.5713,
+        "max": 0.5713
+      }
+    },
+    "wide_context_v3": {
+      "candidate_id": "wide_context_v3",
+      "description": "Imports every graph symbol; tests whether extra irrelevant context improves the strict policy.",
+      "case_count": 32,
+      "supported_case_count": 24,
+      "adversarial_case_count": 8,
+      "task_success_count": 31,
+      "task_success_rate": 0.96875,
+      "generation_validation_pass_rate": 1.0,
+      "safe_rejection_recall": 0.875,
+      "exact_rejection_accuracy": 0.875,
+      "false_acceptance_count": 1,
+      "mean_groundedness": 1.0,
+      "citation_precision": 0.875,
+      "required_symbol_recall": 1.0,
+      "error_rate": 0.03125,
+      "failure_taxonomy": {
+        "adversarial:generated": 1
+      },
+      "observed_rejection_codes": {
+        "invalid_class_name": 1,
+        "invalid_config_path": 1,
+        "invalid_intent_control_character": 1,
+        "invalid_intent_length": 1,
+        "invalid_package_name": 1,
+        "unrecognized_intent": 1,
+        "unsafe_config_path": 1
+      },
+      "latency_ms": {
+        "p50": 0.3044,
+        "p95": 0.3694,
+        "p99": 0.6839,
+        "max": 0.6839
+      }
+    }
+  },
+  "confirmation_result": {
+    "candidate_id": "strict_graph_v2",
+    "description": "Uses exact graph context and fails closed on intent, syntax, contract, grounding, or safety errors.",
+    "case_count": 32,
+    "supported_case_count": 24,
+    "adversarial_case_count": 8,
+    "task_success_count": 32,
+    "task_success_rate": 1.0,
+    "generation_validation_pass_rate": 1.0,
+    "safe_rejection_recall": 1.0,
+    "exact_rejection_accuracy": 1.0,
+    "false_acceptance_count": 0,
+    "mean_groundedness": 1.0,
+    "citation_precision": 1.0,
+    "required_symbol_recall": 1.0,
+    "error_rate": 0.0,
+    "failure_taxonomy": {},
+    "observed_rejection_codes": {
+      "invalid_class_name": 1,
+      "invalid_config_path": 1,
+      "invalid_intent_control_character": 1,
+      "invalid_intent_length": 1,
+      "invalid_package_name": 1,
+      "unrecognized_intent": 1,
+      "unsafe_config_path": 1,
+      "unsupported_version": 1
+    },
+    "latency_ms": {
+      "p50": 0.3026,
+      "p95": 0.3219,
+      "p99": 0.3631,
+      "max": 0.3631
+    }
+  },
+  "weakest_behavior": "No failures were observed in the bounded synthetic grammar; free-form intent generalization and external framework compilation are not proven by this benchmark.",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+    "latency_scope": "single-process local benchmark; not a production SLO"
+  },
+  "command": "python scripts/evaluate_workflow.py",
+  "random_seed": null
+}

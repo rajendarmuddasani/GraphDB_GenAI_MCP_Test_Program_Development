@@ -18,10 +18,10 @@ import argparse
 import json
 import logging
 import os
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from defusedxml import ElementTree as ET
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 
@@ -67,10 +67,7 @@ class Neo4jAgent:
         }
         missing = [name for name, value in required.items() if not value]
         if missing:
-            raise ValueError(
-                "Missing required Neo4j environment variables: "
-                + ", ".join(missing)
-            )
+            raise ValueError("Missing required Neo4j environment variables: " + ", ".join(missing))
 
         return cls(
             uri=required["NEO4J_URI"],
@@ -119,13 +116,9 @@ class Neo4jAgent:
         resolved_build_xml_path = Neo4jAgent._resolve_existing_path(build_xml_path)
 
         if not resolved_project_path.is_dir():
-            raise NotADirectoryError(
-                f"Project path must be a directory: {resolved_project_path}"
-            )
+            raise NotADirectoryError(f"Project path must be a directory: {resolved_project_path}")
         if resolved_build_xml_path.suffix.lower() != ".xml":
-            raise ValueError(
-                f"Build file must be an XML file: {resolved_build_xml_path}"
-            )
+            raise ValueError(f"Build file must be an XML file: {resolved_build_xml_path}")
 
         java_files = sorted(resolved_project_path.rglob("*.java"))
         package_names = sorted(
@@ -134,17 +127,14 @@ class Neo4jAgent:
                 for java_file in java_files
             }
         )
-        build_dependencies = Neo4jAgent._extract_build_dependencies(
-            resolved_build_xml_path
-        )
+        build_dependencies = Neo4jAgent._extract_build_dependencies(resolved_build_xml_path)
 
         return {
             "project_root": str(resolved_project_path),
             "build_file": str(resolved_build_xml_path),
             "java_file_count": len(java_files),
             "sample_java_files": [
-                str(java_file.relative_to(resolved_project_path))
-                for java_file in java_files[:10]
+                str(java_file.relative_to(resolved_project_path)) for java_file in java_files[:10]
             ],
             "package_count": len(package_names),
             "packages": package_names,
@@ -199,13 +189,6 @@ class Neo4jAgent:
         with self.driver.session() as session:
             result = session.run(cypher, parameters or {})
             return [record.data() for record in result]
-
-    def clear_database(self):
-        """Clear all nodes and relationships from the database."""
-        with self.driver.session() as session:
-            session.run("MATCH (n) DETACH DELETE n")
-            logger.warning("Database cleared")
-
 
 def build_parser() -> argparse.ArgumentParser:
     """Create the command-line parser for local workflows."""

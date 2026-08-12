@@ -1,119 +1,132 @@
-# Graph-Backed Java Test Generation
+# Graph-Backed MCP Java Test Generation
 
 [![CI](https://github.com/rajendarmuddasani/GraphDB_GenAI_MCP_Test_Program_Development/actions/workflows/ci.yml/badge.svg)](https://github.com/rajendarmuddasani/GraphDB_GenAI_MCP_Test_Program_Development/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-14%20passed-brightgreen)
-[![Evidence](https://img.shields.io/badge/evidence-verified-blue)](evidence/claims.json)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.12-4ea5d9)](pyproject.toml)
+[![Evidence](https://img.shields.io/badge/evidence-validated-18745a)](evidence/claims.json)
+[![License](https://img.shields.io/badge/license-MIT-f3c969)](LICENSE)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Neo4j 5.0+](https://img.shields.io/badge/neo4j-5.0+-green.svg)](https://neo4j.com/)
+A bounded natural-language request becomes graph-cited Java, then either passes syntax, contract, grounding, source-safety, and compilation gates or returns a typed rejection through an official MCP server.
 
-Reference implementation for building a graph-backed workflow around Java test assets, Neo4j, and MCP-driven developer assistance.
+> **Evidence boundary:** this is an independently generated synthetic framework with three supported intent forms and a deterministic generator. It does not call an external LLM, prove free-form language understanding, reproduce a proprietary framework, or establish a production SLO.
 
-## Overview
+## Evidence Dashboard
 
-This repository packages a clean, publishable starting point for teams that want to:
+| Surface | Accepted local evidence | Source |
+|---|---:|---|
+| Data contract | 96 CC0 synthetic intents; 32 development / 32 validation / 32 confirmation | [task evaluation](evidence/task_evaluation.json) |
+| Confirmation task success | 32/32 bounded tasks | [case trace](evidence/evaluation_trace.json) |
+| Generated-source validation | 24/24 supported intents | [task evaluation](evidence/task_evaluation.json) |
+| Safe rejection | 8/8 adversarial or unsupported intents | [task evaluation](evidence/task_evaluation.json) |
+| Grounding | 100% citation precision and required-symbol recall | [task evaluation](evidence/task_evaluation.json) |
+| Live graph | Neo4j 5.26.29; 8 symbols; 12 methods | [Neo4j integration](evidence/neo4j_integration.json) |
+| Official MCP | 120/120 expected outcomes; zero protocol errors | [MCP benchmark](evidence/mcp_benchmark.json) |
+| Warm MCP latency | 29.13 / 48.61 / 54.23 ms p50 / p95 / p99, concurrency 1 | [MCP benchmark](evidence/mcp_benchmark.json) |
+| Java compilation | Generated class plus seven synthetic stubs compiled | [compile evidence](evidence/java_compile.json) |
+| External model use | 0 calls; $0 model API cost | [MCP benchmark](evidence/mcp_benchmark.json) |
 
-- inventory Java test assets before ingestion,
-- model code relationships in Neo4j,
-- expose graph context through MCP-compatible tooling,
-- reuse prompt templates for structured test generation workflows.
+Latency figures are single-process local Windows measurements, not production objectives.
 
-The current codebase focuses on the pieces that are useful in a public standalone repository: connection management, project preflight scanning, sample assets, notebooks, templates, and integration guidance.
+![Measured candidate comparison](assets/evaluation-candidates.png)
 
-## Why It Matters
+## Selection, Not Just Generation
 
-Large Java test environments typically combine Ant builds, TOML-driven configuration, framework-specific classes, and hand-built generation workflows. That combination makes onboarding, queryability, and automation harder than it should be.
+The selection objective was declared before confirmation: maximize validation task success among candidates passing **all** safety gates. Confirmation was opened only for the winner.
 
-This project shows a practical path to make those assets easier to inspect and operationalize with graph storage and LLM tooling, without tying the repository to proprietary code or internal process documentation.
+| Validation candidate | Task success | Generated source valid | Safe rejection | Citation precision | Decision |
+|---|---:|---:|---:|---:|---|
+| No graph `v0` | 21.88% | 0% | 87.5% | 0% | Rejected: no grounding |
+| Lenient repair `v1` | 75.0% | 100% | 0% | 100% | Rejected: 8 false accepts |
+| **Strict graph `v2`** | **100%** | **100%** | **100%** | **100%** | **Selected** |
+| Wide context `v3` | 96.88% | 100% | 87.5% | 87.5% | Rejected: irrelevant context and one false accept |
 
-## Included Capabilities
+The exact protocol, thresholds, candidate descriptions, and tie-breaker are in [evaluation_protocol.json](evidence/evaluation_protocol.json).
 
-- Neo4j connection wrapper with environment-based configuration.
-- Project preflight scanning for Java source files and Ant build dependencies.
-- Cypher query execution helpers and a database health check.
-- MCP integration guidance for wiring graph tools into VS Code.
-- Prompt templates and sample Java/TOML assets for experimentation.
-- Notebook examples for walkthroughs and exploratory usage.
+## Executable Workflow
 
-## Architecture
+![Implemented MCP generation workflow](assets/mcp-generation-workflow.png)
 
-![Neo4j Graph Schema](assets/neo4j-graph-schema.png)
+1. `GenerationIntent.from_text` accepts one of three explicit request forms and validates every field.
+2. `GraphCatalog` or `Neo4jCatalog` retrieves seven version-scoped symbols from the CC0 fixture.
+3. `GenerationWorkflow` renders Java from those exact graph citations.
+4. `JavaValidator` uses Tree-sitter and contract checks to reject malformed, ungrounded, or unsafe source.
+5. FastMCP exposes the same policy over stdio; no raw Cypher or filesystem-write tool is exposed.
+6. The accepted class compiles against seven independently generated Java framework stubs.
 
-At a high level, the workflow is:
+## MCP Tools
 
-1. Inspect a Java project and its build configuration.
-2. Persist relevant code relationships in Neo4j.
-3. Expose curated graph queries through MCP.
-4. Use those results to drive assisted code generation.
+| Tool | Bounded behavior |
+|---|---|
+| `get_fixture_metadata` | Returns fixture identity, provenance, license, version, backend, and symbol count |
+| `search_graph` | Parameterized name/method search with a 20-row maximum |
+| `generate_java_test` | Generates from typed fields after all validation gates |
+| `generate_java_test_from_intent` | Parses the bounded language grammar and runs the same strict policy |
+| `validate_java_source` | Validates up to 20,000 characters without writing or executing source |
 
-![Neo4j Graph Query Result](assets/neo4j-graph-visualization.png)
-
-Additional implementation notes are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md).
-
-## Repository Layout
-
-```text
-.
-├── README.md
-├── GETTING_STARTED.md
-├── LICENSE
-├── CONTRIBUTING.md
-├── SECURITY.md
-├── pyproject.toml
-├── requirements.txt
-├── configs/
-│   └── .env.example
-├── docs/
-│   ├── ARCHITECTURE.md
-│   └── MCP_INTEGRATION.md
-├── examples/
-│   ├── 01_quick_start.ipynb
-│   ├── 02_advanced_queries.ipynb
-│   ├── 03_mcp_code_generation.ipynb
-│   └── sample_project/
-├── src/
-│   └── neo4j_agent.py
-├── templates/
-│   ├── AnalogTestCase.prompt.md
-│   └── GenericTestMethod.prompt.md
-└── tests/
-    └── test_neo4j_agent.py
-```
+The Neo4j adapter uses fixed parameterized Cypher, rejects credentials embedded in URIs, and refuses fixture identity collisions with a different SHA-256.
 
 ## Quick Start
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) for setup and example commands.
-
-Typical flow:
-
 ```bash
 python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp configs/.env.example .env
-python src/neo4j_agent.py preflight \
-  --version v1.0.0 \
-  --project-path examples/sample_project \
-  --build-xml-path examples/sample_project/build.xml
+python -m pip install -r requirements-dev.txt
+python -m pip install --no-deps -e .
+python scripts/container_smoke.py python -m graph_mcp.server
 ```
 
-## Example Commands
+The default `fixture` backend needs no database. To use the measured live graph path, see [GETTING_STARTED.md](GETTING_STARTED.md).
 
-Check database connectivity:
+## Reproduce Evidence
 
 ```bash
-python src/neo4j_agent.py health-check --env-file .env
+python scripts/build_evaluation_fixture.py
+python scripts/evaluate_workflow.py
+python scripts/validate_evidence.py
+pytest --cov=src --cov-report=term-missing --cov-fail-under=75
+ruff check src tests scripts
+pip-audit -r requirements.txt --progress-spinner off
+bandit -r src scripts -q -ll
 ```
 
-Run a Cypher query:
+Java compilation is also reproducible with JDK 21:
 
 ```bash
-python src/neo4j_agent.py query \
-  --env-file .env \
-  --cypher "MATCH (n) RETURN count(n) AS total"
+python scripts/compile_generated.py --require-compiler
 ```
 
-## Scope
+## Security and Failure Behavior
 
-This repository is intentionally positioned as a clean starter and reference implementation. It does not include proprietary source code, internal process notes, or interview-oriented artifacts.
+- Unknown versions and missing graph symbols fail closed.
+- Class, package, module, and config path fields use strict allowlists.
+- Absolute paths, `..` traversal, control characters, and unknown fields are rejected.
+- Generated source is scanned for process, filesystem, network, native-code, and exit APIs.
+- XML preflight parsing uses `defusedxml`.
+- Neo4j credentials come only from environment variables and never enter evidence artifacts.
+- The pinned Chainguard Linux image runs as non-root UID/GID `65532`; CI performs an MCP-over-container stdio smoke test.
+
+See [SECURITY.md](SECURITY.md) for the supported threat boundary.
+
+## Repository Map
+
+```text
+src/graph_mcp/          intent, graph, generation, validation, evaluation, MCP
+fixtures/               CC0 graph, intent benchmark, synthetic Java framework
+evidence/               claim ledger, protocol, case trace, runtime measurements
+scripts/                replay, compile, graph, MCP, security, and asset commands
+tests/                  unit, protocol, evidence, and opt-in live Neo4j gates
+docs/                   architecture and MCP integration details
+examples/sample_project legacy preflight-only Ant/TOML sample
+```
+
+## What Is Not Proven
+
+- General free-form intent parsing or LLM reasoning quality
+- Compatibility with confidential, proprietary, or production Java frameworks
+- Concurrent, distributed, or production latency and availability
+- Production deployment, adoption, productivity gain, yield gain, or test-time reduction
+- Automatic execution of generated code against hardware
+
+These are promotion gates, not implied outcomes. The full machine-readable boundary is in [claims.json](evidence/claims.json).
+
+## License
+
+Repository code is MIT licensed. The independently generated graph, intent, and Java framework fixtures are labelled CC0-1.0 in their metadata and documentation.

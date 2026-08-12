@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-11T10:12:47.888090+00:00",
+  "transport": "official MCP stdio",
+  "backend": "neo4j",
+  "concurrency": 1,
+  "warmup_count": 10,
+  "request_count": 120,
+  "supported_request_count": 90,
+  "adversarial_request_count": 30,
+  "task_success_count": 120,
+  "task_success_rate": 1.0,
+  "protocol_error_count": 0,
+  "observed_statuses": {
+    "generated": 90,
+    "rejected": 30
+  },
+  "latency_ms": {
+    "p50": 29.1301,
+    "p95": 48.6138,
+    "p99": 54.2347,
+    "max": 69.0575
+  },
+  "startup_ms": 1997.7676,
+  "tool_count": 5,
+  "tools": [
+    "generate_java_test",
+    "generate_java_test_from_intent",
+    "get_fixture_metadata",
+    "search_graph",
+    "validate_java_source"
+  ],
+  "external_model_calls": 0,
+  "external_model_cost_usd": 0.0,
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "scope": "single-process local sequential benchmark; not a production SLO"
+  },
+  "command": "python scripts/benchmark_mcp.py"
+}

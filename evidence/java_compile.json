@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-11T10:11:18.617071+00:00",
+  "status": "passed",
+  "return_code": 0,
+  "generated_source_sha256": "31ca8d8c6ddcb8e0eb646c689dc251ac21b84f3c6df8d69f15acb2cfb283ac59",
+  "graph_fixture_sha256": "70b6bfd9c4b28e9827af19490a96546993f8b49458f87e5c3a5a17fc2f60a9ee",
+  "source_file_count": 8,
+  "class_file_count": 8,
+  "stdout": "",
+  "stderr": "",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "compiler": "eclipse-ecj",
+  "executable": "java.EXE",
+  "compiler_jar": "ecj-3.21.0.jar",
+  "compiler_jar_sha256": "9082211f48782750093f07822d1ae481e8ece250449578f372334da626ccdead"
+}

@@ -1,12 +1,12 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from neo4j_agent import Neo4jAgent
+from neo4j_agent import Neo4jAgent  # noqa: E402
 
 
 class _FakeResult:
@@ -52,12 +52,12 @@ def test_collect_project_snapshot_rejects_missing_paths(tmp_path):
         Neo4jAgent.collect_project_snapshot(missing_dir, missing_build)
 
 
-def test_from_env_uses_environment_file(tmp_path):
+def test_from_env_uses_environment_file(tmp_path, monkeypatch):
+    for name in ("NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD"):
+        monkeypatch.delenv(name, raising=False)
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "NEO4J_URI=bolt://localhost:7687\n"
-        "NEO4J_USER=neo4j\n"
-        "NEO4J_PASSWORD=test-password\n",
+        "NEO4J_URI=bolt://localhost:7687\nNEO4J_USER=neo4j\nNEO4J_PASSWORD=test-password\n",
         encoding="utf-8",
     )
 
@@ -81,6 +81,7 @@ def test_verify_connection_returns_connected_status():
         "connected": True,
         "uri": "bolt://localhost:7687",
     }
+
 
 # ── Additional coverage ───────────────────────────────────────────────────────
 
@@ -116,6 +117,7 @@ def test_ingest_project_snapshot_embedded():
 
 def test_ingest_project_missing_dir_raises():
     import pytest
+
     agent = _agent()
     with pytest.raises(FileNotFoundError):
         agent.ingest_project("1.0", "/nonexistent/path", BUILD_XML)
@@ -133,11 +135,11 @@ def test_query_returns_list():
     class _IterableDriver:
         def session(self):
             return _IterableSession()
+
         def close(self):
             return None
 
-    agent = Neo4jAgent(uri="bolt://x", user="u", password="p",
-                       driver=_IterableDriver())
+    agent = Neo4jAgent(uri="bolt://x", user="u", password="p", driver=_IterableDriver())
     results = agent.query("RETURN 1 AS n")
     assert isinstance(results, list)
 
@@ -159,8 +161,7 @@ def test_context_manager_calls_close():
         def close(self):
             closed.append(True)
 
-    with Neo4jAgent(uri="bolt://x", user="u", password="p",
-                    driver=_TrackingDriver()):
+    with Neo4jAgent(uri="bolt://x", user="u", password="p", driver=_TrackingDriver()):
         pass
 
     assert len(closed) == 1
@@ -178,6 +179,7 @@ def test_from_env_raises_on_missing_vars(tmp_path, monkeypatch):
 
 def test_collect_snapshot_rejects_non_xml(tmp_path):
     import pytest
+
     build_txt = tmp_path / "build.txt"
     build_txt.write_text("not xml")
     with pytest.raises(ValueError):
@@ -186,12 +188,18 @@ def test_collect_snapshot_rejects_non_xml(tmp_path):
 
 def test_build_parser_subcommands():
     from neo4j_agent import build_parser
+
     parser = build_parser()
-    args = parser.parse_args([
-        "preflight",
-        "--version", "1.0",
-        "--project-path", str(SAMPLE_PROJECT),
-        "--build-xml-path", str(BUILD_XML),
-    ])
+    args = parser.parse_args(
+        [
+            "preflight",
+            "--version",
+            "1.0",
+            "--project-path",
+            str(SAMPLE_PROJECT),
+            "--build-xml-path",
+            str(BUILD_XML),
+        ]
+    )
     assert args.command == "preflight"
     assert args.version == "1.0"

@@ -4,42 +4,36 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "graph-mcp-code-intelligence"
-version = "0.1.0"
-description = "Reference implementation for graph-backed Java test generation workflows"
+version = "1.0.0"
+description = "Graph-grounded MCP workflow for constrained Java test generation"
 readme = "README.md"
-requires-python = ">=3.9"
-license = { text = "MIT" }
+requires-python = ">=3.10"
+license = "MIT"
 authors = [
   { name = "Project Maintainer" }
 ]
 dependencies = [
-  "neo4j==5.15.0",
-  "python-dotenv==1.0.0",
-  "pandas==2.1.4",
-  "toml==0.10.2",
-  "GitPython==3.1.40",
-  "tree-sitter==0.21.0",
-  "tree-sitter-java==0.21.0",
-  "jupyter==1.0.0",
-  "ipykernel==6.27.1",
-  "notebook==7.0.6",
-  "openai==1.6.1",
-  "sentence-transformers==2.2.2",
-  "requests==2.31.0",
-  "pyyaml==6.0.1",
-  "colorama==0.4.6",
-  "tqdm==4.66.1"
+  "defusedxml==0.7.1",
+  "mcp==1.29.0",
+  "neo4j==6.2.0",
+  "python-dotenv==1.2.2",
+  "tree-sitter==0.25.2",
+  "tree-sitter-java==0.23.5"
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest==7.4.3",
-  "black==23.12.1",
-  "flake8==7.0.0"
+  "bandit==1.9.4",
+  "pillow==12.3.0",
+  "pip-audit==2.9.0",
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "ruff==0.16.1"
 ]
 
 [project.scripts]
 graph-mcp-agent = "neo4j_agent:main"
+graph-mcp-server = "graph_mcp.server:main"
 
 [tool.setuptools]
 py-modules = ["neo4j_agent"]
@@ -47,5 +41,16 @@ py-modules = ["neo4j_agent"]
 [tool.setuptools.package-dir]
 "" = "src"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

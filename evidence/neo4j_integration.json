@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-11T10:12:40.604712+00:00",
+  "status": "passed",
+  "server_agent": "Neo4j/5.26.29",
+  "protocol_version": "(5, 8)",
+  "fixture_id": "synthetic-java-test-framework-v1",
+  "fixture_sha256": "70b6bfd9c4b28e9827af19490a96546993f8b49458f87e5c3a5a17fc2f60a9ee",
+  "fixture_version": "v1.0.0",
+  "symbol_count": 8,
+  "method_count": 12,
+  "required_symbol_count": 7,
+  "method_search_match_count": 1,
+  "generation_status": "generated",
+  "generation_groundedness": 1.0,
+  "generation_validation_passed": true,
+  "credentials_recorded": false,
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "scope": "temporary local Neo4j Community instance"
+  },
+  "command": "python scripts/verify_neo4j.py"
+}

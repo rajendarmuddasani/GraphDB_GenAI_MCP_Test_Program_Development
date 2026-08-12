@@ -1,156 +1,119 @@
-# MCP Integration Guide
+# MCP Integration
 
-This document outlines one practical way to connect a Neo4j-backed graph workflow to an MCP-capable client such as GitHub Copilot in VS Code.
+## Server Contract
 
-## Integration Model
+The server uses the official MCP Python SDK and stdio transport. It deliberately omits raw Cypher, arbitrary file writes, shell execution, and generated-code execution.
 
-```text
-Editor or MCP client
-        |
-        v
-MCP server process
-        |
-        v
-Curated graph tools
-        |
-        v
-Neo4j database
-```
+## Client Configuration
 
-The important design choice is to keep the MCP surface narrow. Expose a few reliable graph operations instead of a large number of loosely defined tools.
-
-## Recommended Tool Categories
-
-- project version lookup,
-- class search,
-- dependency discovery,
-- controlled Cypher execution for diagnostics.
-
-## Example Tool Configuration
-
-Create a YAML file similar to the following and adapt it to your MCP server implementation:
-
-```yaml
-name: graph-code-intelligence
-version: 1.0.0
-description: "Neo4j-backed tools for Java test asset discovery"
-
-connection:
-  uri: bolt://localhost:7687
-  user: neo4j
-  password: ${NEO4J_PASSWORD}
-
-tools:
-  - name: get_project_version_context
-    description: "Fetch classes and linked assets for a specific version"
-    parameters:
-      version:
-        type: string
-        required: true
-    cypher: |
-      MATCH (cls:Class)
-      WHERE cls.gitTag = $version
-      OPTIONAL MATCH (cls)-[:DEFINES_METHOD]->(m:Method)
-      RETURN cls, collect(DISTINCT m) AS methods
-
-  - name: search_class_by_name
-    description: "Search for classes by partial name"
-    parameters:
-      class_name:
-        type: string
-        required: true
-    cypher: |
-      MATCH (cls:Class)
-      WHERE cls.name CONTAINS $class_name
-      RETURN cls.name, cls.qualifiedName, cls.gitTag
-      ORDER BY cls.name
-
-  - name: find_class_dependencies
-    description: "Find dependencies for a specific class"
-    parameters:
-      class_name:
-        type: string
-        required: true
-    cypher: |
-      MATCH (cls:Class {name: $class_name})-[:DEPENDS_ON]->(dep)
-      RETURN dep.name, dep.version
-
-  - name: execute_diagnostic_cypher
-    description: "Run a tightly controlled diagnostic Cypher query"
-    parameters:
-      cypher:
-        type: string
-        required: true
-    handler: execute_raw_cypher
-```
-
-## VS Code Example
-
-Configure your MCP client with a local server entry. The exact executable depends on the MCP server you choose to run.
+### Offline fixture backend
 
 ```json
 {
-  "mcpServers": {
-    "graph-code-intelligence": {
-      "command": "/absolute/path/to/your-mcp-server",
-      "args": [
-        "serve",
-        "--config",
-        "/absolute/path/to/neo4j_tools.yaml"
-      ],
+  "servers": {
+    "synthetic-java-test-generator": {
       "type": "stdio",
+      "command": "ABSOLUTE_PATH_TO_PYTHON",
+      "args": ["-m", "graph_mcp.server"],
+      "cwd": "ABSOLUTE_PATH_TO_REPOSITORY",
       "env": {
-        "NEO4J_PASSWORD": "replace-me"
+        "GRAPH_BACKEND": "fixture"
       }
     }
   }
 }
 ```
 
-## Suggested Workflow
+### Neo4j backend
 
-1. Run the preflight command in this repository to inventory the project inputs.
-2. Load the relevant graph data into Neo4j using your ingestion pipeline.
-3. Start the MCP server with a small, curated tool set.
-4. Ask the editor to retrieve graph context before generating or modifying code.
-
-## Validation Prompts
-
-Once the MCP server is available, try targeted prompts such as:
+Add the following process environment variables through the client or operating system. Do not put real values in a committed JSON file.
 
 ```text
-Use search_class_by_name to find classes related to ExampleTestMethod.
+GRAPH_BACKEND=neo4j
+NEO4J_URI=bolt://127.0.0.1:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=<secret local value>
 ```
+
+The graph must be seeded first with `python scripts/seed_graph.py`.
+
+## Tools
+
+### `get_fixture_metadata`
+
+No parameters. Returns fixture ID, version, provenance, license, backend, and symbol count.
+
+### `search_graph`
+
+| Parameter | Type | Constraint |
+|---|---|---|
+| `query` | string | 1-80 characters |
+| `version` | string | Must match the configured fixture version |
+| `limit` | integer | 1-20 |
+
+The Neo4j implementation uses a fixed query with `search_text`, `version`, `fixture_id`, and `limit` parameters.
+
+### `generate_java_test`
+
+Accepts structured `class_name`, `package_name`, `module_name`, `config_path`, and `version` fields. Unknown fields cannot enter this typed MCP surface.
+
+### `generate_java_test_from_intent`
+
+Accepts one `request` string. Supported forms are intentionally narrow:
 
 ```text
-Use find_class_dependencies to list the dependencies for ExampleTestMethod.
+Generate a configuration-driven Java test method named CLASS in package PACKAGE for module MODULE using CONFIG.toml on framework VERSION.
+
+Create CLASS as a Java test workflow in PACKAGE backed by module MODULE and config CONFIG.toml for VERSION.
+
+For framework VERSION, generate class CLASS under package PACKAGE from module MODULE and config CONFIG.toml
 ```
 
-## Operational Notes
+This grammar is a safety and evaluation choice, not evidence of broad language understanding.
 
-- Prefer version-scoped tools over open-ended graph reads.
-- Keep Cypher handlers auditable and intentionally limited.
-- Avoid embedding credentials directly in committed config files.
-- Treat MCP as a context bridge, not as a replacement for ingestion discipline.
+### `validate_java_source`
 
-## Troubleshooting
+Accepts source plus the same structured identity fields. Source is limited to 20,000 characters and is parsed, checked, and discarded. The tool does not compile, write, or execute it.
 
-### Authentication failures
+## Response Semantics
 
-If the MCP server cannot authenticate to Neo4j, verify that the password is being passed through the local MCP configuration and test the same credentials outside the editor first.
+Successful generation returns:
 
-### Empty tool responses
+```json
+{
+  "status": "generated",
+  "source": "...",
+  "citations": [],
+  "validation": {
+    "valid": true,
+    "syntax_valid": true,
+    "contract_valid": true,
+    "security_valid": true,
+    "groundedness": 1.0
+  },
+  "error": null
+}
+```
 
-If a tool runs but returns no rows, confirm that the expected graph data is present and that the query parameters match the version or class names stored in Neo4j.
+Rejected input returns no source:
 
-## Security Notes
+```json
+{
+  "status": "rejected",
+  "source": null,
+  "citations": [],
+  "validation": null,
+  "error": {
+    "code": "unsafe_config_path",
+    "message": "Config path must remain inside the project"
+  }
+}
+```
 
-- Keep local MCP client configuration files out of version control when they contain secrets.
-- Prefer environment variables for database credentials.
-- Restrict any raw Cypher execution tool to trusted local workflows.
+Generated source that fails a downstream gate returns `validation_failed` and no source.
 
-## Next Steps
+## Protocol Validation
 
-- See [README.md](../README.md) for the project overview.
-- See [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for the repository design.
-- See [GETTING_STARTED.md](../GETTING_STARTED.md) for local setup and command-line usage.
+`tests/test_mcp_protocol.py` launches the server as a subprocess, performs a real MCP initialization and tool-list exchange, calls valid generation, and verifies traversal rejection. `MCP_TEST_GRAPH_BACKEND=neo4j` runs the same protocol against the live graph service.
+
+The local live benchmark executed 120 sequential calls through Neo4j with zero protocol errors. See `evidence/mcp_benchmark.json`; those local measurements are not a production SLO.

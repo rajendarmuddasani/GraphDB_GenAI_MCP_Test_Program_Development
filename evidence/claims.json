@@ -1,37 +1,199 @@
 {
-  "project": "GraphDB GenAI MCP Test Program Development",
+  "schema_version": "2.0",
+  "project": "Graph-Backed MCP Java Test Generation",
+  "base_sha": "15a8fb63952f8c49eeb3201e0f29b0b7874bba6b",
+  "policy_identity": "strict_graph_v2:03918ab1cd259eac1f555ea08674278b1e9368c751083fa816c010ef4c88aa9e",
+  "data_scope": "Independently generated CC0 synthetic graph metadata and natural-language intents",
   "claims": [
     {
-      "claim": "collect_project_snapshot correctly counts Java files and 4 build dependencies from the sample project",
-      "value": true,
-      "unit": "boolean",
+      "id": "benchmark-total",
+      "claim": "The bounded benchmark contains 96 independently generated synthetic intents.",
+      "value": 96,
+      "unit": "cases",
       "evidence_class": "measured",
-      "artifact": "tests/test_neo4j_agent.py::test_collect_project_snapshot_counts_java_files_and_dependencies"
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/counts/total",
+      "public_allowed": true,
+      "allowed_wording": "Evaluated on 96 independently generated synthetic intents split 32/32/32 across development, validation, and confirmation."
     },
     {
-      "claim": "ingest_project returns preflight_complete status with embedded snapshot without requiring a live Neo4j connection",
-      "value": true,
-      "unit": "boolean",
+      "id": "confirmation-task-success",
+      "claim": "The selected strict graph policy completed all bounded confirmation tasks.",
+      "value": 1.0,
+      "unit": "rate",
       "evidence_class": "measured",
-      "artifact": "tests/test_neo4j_agent.py::test_ingest_project_returns_preflight_report"
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/confirmation_result/task_success_rate",
+      "public_allowed": true,
+      "allowed_wording": "32/32 bounded synthetic confirmation tasks succeeded."
     },
     {
-      "claim": "context manager __exit__ calls driver.close() exactly once",
-      "value": true,
-      "unit": "boolean",
+      "id": "confirmation-generation-validation",
+      "claim": "Every supported confirmation intent produced Java that passed syntax, contract, graph-grounding, and source-safety validation.",
+      "value": 1.0,
+      "unit": "rate",
       "evidence_class": "measured",
-      "artifact": "tests/test_neo4j_agent.py::test_context_manager_calls_close"
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/confirmation_result/generation_validation_pass_rate",
+      "public_allowed": true,
+      "allowed_wording": "24/24 supported confirmation intents passed all generated-source validation gates."
     },
     {
-      "claim": "from_env raises ValueError when required Neo4j env vars are missing",
+      "id": "confirmation-safe-rejection",
+      "claim": "Every adversarial or unsupported confirmation intent was rejected with its expected error code.",
+      "value": 1.0,
+      "unit": "recall",
+      "evidence_class": "measured",
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/confirmation_result/safe_rejection_recall",
+      "public_allowed": true,
+      "allowed_wording": "8/8 adversarial or unsupported confirmation intents were rejected safely."
+    },
+    {
+      "id": "confirmation-grounding",
+      "claim": "The selected policy cited every required graph symbol and no irrelevant symbol on supported confirmation cases.",
+      "value": 1.0,
+      "unit": "precision",
+      "evidence_class": "measured",
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/confirmation_result/citation_precision",
+      "public_allowed": true,
+      "allowed_wording": "Confirmation citation precision and required-symbol recall were both 100% within the bounded synthetic catalog."
+    },
+    {
+      "id": "core-latency-p95",
+      "claim": "The selected in-process policy had 0.3219 ms p95 latency on the local confirmation run.",
+      "value": 0.3219,
+      "unit": "milliseconds",
+      "evidence_class": "measured",
+      "artifact": "evidence/task_evaluation.json",
+      "json_pointer": "/confirmation_result/latency_ms/p95",
+      "public_allowed": true,
+      "allowed_wording": "Local in-process confirmation latency was 0.3026/0.3219/0.3631 ms p50/p95/p99; this is not a production SLO."
+    },
+    {
+      "id": "live-neo4j-version",
+      "claim": "The synthetic graph was materialized and queried on Neo4j Community 5.26.29.",
+      "value": "Neo4j/5.26.29",
+      "unit": "server agent",
+      "evidence_class": "measured",
+      "artifact": "evidence/neo4j_integration.json",
+      "json_pointer": "/server_agent",
+      "public_allowed": true,
+      "allowed_wording": "Live local integration passed on Neo4j Community 5.26.29 with 8 symbols and 12 methods."
+    },
+    {
+      "id": "live-neo4j-symbols",
+      "claim": "The live synthetic graph contains eight versioned framework symbols.",
+      "value": 8,
+      "unit": "symbols",
+      "evidence_class": "measured",
+      "artifact": "evidence/neo4j_integration.json",
+      "json_pointer": "/symbol_count",
+      "public_allowed": true,
+      "allowed_wording": "The CC0 synthetic graph fixture contains 8 symbols and 12 methods."
+    },
+    {
+      "id": "mcp-task-success",
+      "claim": "All 120 sequential official-MCP stdio benchmark calls through live Neo4j produced the expected result.",
+      "value": 1.0,
+      "unit": "rate",
+      "evidence_class": "measured",
+      "artifact": "evidence/mcp_benchmark.json",
+      "json_pointer": "/task_success_rate",
+      "public_allowed": true,
+      "allowed_wording": "120/120 sequential local MCP calls through live Neo4j succeeded with zero protocol errors."
+    },
+    {
+      "id": "mcp-latency-p95",
+      "claim": "Warm official-MCP stdio calls through live Neo4j had 48.6138 ms local p95 latency.",
+      "value": 48.6138,
+      "unit": "milliseconds",
+      "evidence_class": "measured",
+      "artifact": "evidence/mcp_benchmark.json",
+      "json_pointer": "/latency_ms/p95",
+      "public_allowed": true,
+      "allowed_wording": "Warm local Neo4j-backed MCP latency was 29.13/48.61/54.23 ms p50/p95/p99 at concurrency one; startup was measured separately."
+    },
+    {
+      "id": "mcp-tool-count",
+      "claim": "The official MCP stdio server exposes five bounded tools.",
+      "value": 5,
+      "unit": "tools",
+      "evidence_class": "measured",
+      "artifact": "evidence/mcp_benchmark.json",
+      "json_pointer": "/tool_count",
+      "public_allowed": true,
+      "allowed_wording": "Five MCP tools cover fixture metadata, graph search, structured generation, intent generation, and source validation."
+    },
+    {
+      "id": "java-compile",
+      "claim": "The accepted generated class and seven synthetic framework stubs compiled successfully.",
+      "value": "passed",
+      "unit": "status",
+      "evidence_class": "measured",
+      "artifact": "evidence/java_compile.json",
+      "json_pointer": "/status",
+      "public_allowed": true,
+      "allowed_wording": "The accepted generated Java source compiled with seven CC0 synthetic framework stubs using checksum-recorded Eclipse ECJ."
+    },
+    {
+      "id": "external-model-cost",
+      "claim": "The accepted deterministic policy made no external model calls and incurred no model API cost.",
+      "value": 0,
+      "unit": "calls",
+      "evidence_class": "measured",
+      "artifact": "evidence/mcp_benchmark.json",
+      "json_pointer": "/external_model_calls",
+      "public_allowed": true,
+      "allowed_wording": "The accepted bounded policy is deterministic and made zero external model calls; it is not evidence of LLM quality."
+    },
+    {
+      "id": "non-root-container",
+      "claim": "A non-root Linux container and a fail-closed container MCP smoke gate are defined.",
       "value": true,
       "unit": "boolean",
-      "evidence_class": "measured",
-      "artifact": "tests/test_neo4j_agent.py::test_from_env_raises_on_missing_vars"
+      "evidence_class": "architecture",
+      "artifact": "Dockerfile",
+      "public_allowed": true,
+      "allowed_wording": "A non-root Linux image and containerized MCP smoke gate are implemented; local Linux image execution was unavailable in this Windows environment."
     }
   ],
-  "external_services": {
-    "neo4j": "not_required_for_tests",
-    "note": "All tests use _FakeDriver/_FakeSession stubs; no live database needed"
-  }
+  "boundaries": [
+    {
+      "id": "free-form-intent",
+      "claim": "General free-form natural-language understanding is proven.",
+      "evidence_class": "unsupported",
+      "public_allowed": false,
+      "reason": "The parser intentionally accepts three bounded request forms only."
+    },
+    {
+      "id": "llm-quality",
+      "claim": "LLM generation quality or hallucination performance is proven.",
+      "evidence_class": "unsupported",
+      "public_allowed": false,
+      "reason": "The accepted policy is deterministic and made no external model calls."
+    },
+    {
+      "id": "proprietary-framework",
+      "claim": "Generated code is compatible with a proprietary production test framework.",
+      "evidence_class": "unsupported",
+      "public_allowed": false,
+      "reason": "Compilation used independently generated CC0 framework stubs only."
+    },
+    {
+      "id": "production-slo",
+      "claim": "The local latency measurements are production service-level objectives.",
+      "evidence_class": "unsupported",
+      "public_allowed": false,
+      "reason": "Measurements were sequential on one local Windows workstation."
+    },
+    {
+      "id": "production-deployment",
+      "claim": "The system is deployed to or adopted in production.",
+      "evidence_class": "unsupported",
+      "public_allowed": false,
+      "reason": "Only local runtime and CI/deployment definitions exist."
+    }
+  ]
 }
